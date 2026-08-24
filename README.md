@@ -106,6 +106,7 @@ Spring Boot 애플리케이션을 실행합니다(src/main/java/com/example/book
 ## 6. PostgreSQL에 데이터 삽입 아래 명령어 실행 (4번에서 썼던 터미널 창 활용)
 bookdb=# 으로 되어있을때 아래 명령어 입력하시면 됩니다.
 
+```sql
 COPY books (
     id,
     title,
@@ -123,13 +124,15 @@ WITH (
     HEADER TRUE,
     ENCODING 'UTF8'
 );
+```
 
 이후 select 쿼리 시 정상적으로 개수 확인 가능
+```sql
 bookdb=# SELECT COUNT(*) FROM books;
  count 
 -------
  30000
-
+```
 
 ## 6. pg_trgm 및 검색 인덱스 확인
 
