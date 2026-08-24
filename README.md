@@ -45,7 +45,7 @@ docker compose version
 git clone https://github.com/imhwan112/book-search.git
 ```
 
-다운로드가 완료되면 프로젝트 디렉터리로 이동합니다.
+다운로드가 완료되면 프로젝트를 IDE로 엽니다(eclipse, IntelliJ).
 
 ```bash
 cd book-search
@@ -77,8 +77,61 @@ PostgreSQL 컨테이너의 상태가 `Up` 또는 `running`으로 표시되면
 
 ---
 
+## 4. PostgreSQL 접속 확인
 
-## 4. pg_trgm 및 검색 인덱스 확인 (현시점 테이블 및 데이터 없음)
+Docker에서 실행 중인 PostgreSQL 컨테이너에 접속합니다.
+
+```bash
+docker compose exec postgres psql -U bookuser -d bookdb
+```
+
+psql (18.6 (Debian 18.6-1.pgdg13+2))
+Type "help" for help.
+
+접속 후 해당 쿼리를 날려 정상적으로 생성되었는지 확인합니다.
+bookdb=# SELECT current_user, current_database();
+ current_user | current_database 
+--------------+------------------
+ bookuser     | bookdb
+(1 row)
+
+---
+
+## 5. Spring Boot 애플리케이션 실행 (해당 시점 테이블 생성)
+테스트를 위한 테이블 생성을 위해 application.yml(src/main/resources 하위에 존재)의 hibernate ddl-auto :create 로 변경해주시면 됩니다.
+
+PostgreSQL이 정상적으로 실행된 상태에서
+Spring Boot 애플리케이션을 실행합니다(src/main/java/com/example/book_search/BookSearchApplication.java 에서 실행).
+
+## 6. PostgreSQL에 데이터 삽입 아래 명령어 실행 (4번에서 썼던 터미널 창 활용)
+bookdb=# 으로 되어있을때 아래 명령어 입력하시면 됩니다.
+
+COPY books (
+    id,
+    title,
+    author,
+    publisher,
+    category,
+    published_date,
+    isbn,
+    price,
+    stock
+)
+FROM '/data/books.csv'
+WITH (
+    FORMAT CSV,
+    HEADER TRUE,
+    ENCODING 'UTF8'
+);
+
+이후 select 쿼리 시 정상적으로 개수 확인 가능
+bookdb=# SELECT COUNT(*) FROM books;
+ count 
+-------
+ 30000
+
+
+## 6. pg_trgm 및 검색 인덱스 확인
 
 도서명 부분 검색 성능을 향상시키기 위해 PostgreSQL의
 `pg_trgm` 확장 기능과 GIN 인덱스를 사용합니다.
@@ -106,37 +159,6 @@ CREATE INDEX IF NOT EXISTS idx_books_title_trgm
 ON books
 USING gin (title gin_trgm_ops);
 ```
-
-
----
-
-## 5. Spring Boot 애플리케이션 실행 (해당 시점 테이블 생성)
-테스트를 위한 테이블 생성을 위해 application.yml의 hibernate ddl-auto :create 로 변경해주시면 됩니다.
-
-PostgreSQL이 정상적으로 실행된 상태에서
-Spring Boot 애플리케이션을 실행합니다.
-
-Gradle Wrapper를 사용하는 경우 다음 명령어를 실행합니다.
-
-
-## 6. PostgreSQL에 데이터 삽입 아래 명령어 실행
-COPY books (
-    id,
-    title,
-    author,
-    publisher,
-    category,
-    published_date,
-    isbn,
-    price,
-    stock
-)
-FROM '/data/books.csv'
-WITH (
-    FORMAT CSV,
-    HEADER TRUE,
-    ENCODING 'UTF8'
-)
 
 ## 7. swagger에서 도서 검색 API 테스트 방법
 1. 해당 URL 접속 http://localhost:8080/swagger-ui/index.html
