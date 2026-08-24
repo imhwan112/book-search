@@ -89,11 +89,13 @@ psql (18.6 (Debian 18.6-1.pgdg13+2))
 Type "help" for help.
 
 접속 후 해당 쿼리를 날려 정상적으로 생성되었는지 확인합니다.
+```sql
 bookdb=# SELECT current_user, current_database();
  current_user | current_database 
 --------------+------------------
  bookuser     | bookdb
 (1 row)
+```
 
 ---
 
